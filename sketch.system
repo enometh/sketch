@@ -1,0 +1,82 @@
+;;; -*- Mode: LISP; Package: :cl-user; BASE: 10; Syntax: ANSI-Common-Lisp; -*-
+;;;
+;;;   Time-stamp: <>
+;;;   Touched: Thu Dec 04 19:44:36 2025 +0530 <enometh@net.meer>
+;;;   Bugs-To: enometh@net.meer
+;;;   Status: Experimental.  Do not redistribute
+;;;   Copyright (C) 2025 Madhu.  All Rights Reserved.
+;;;
+(in-package "CL-USER")
+
+(defvar *sketch-source-dir*
+  (merge-pathnames "Github/sketch/" (translate-logical-pathname "EXTERN:")))
+(defvar *sketch-binary-dir* (binary-directory *sketch-source-dir*))
+
+(mk:defsystem :sketch-examples
+  :source-pathname *sketch-source-dir*
+  :binary-pathname *sketch-binary-dir*
+  :source-extension "lisp"
+  :depends-on (:alexandria
+	       :sketch)
+  :components ((:module "examples"
+		:components ((:file "package")
+			     (:file "sinewave")
+			     (:file "life")
+			     (:file "brownian")
+			     (:file "hello-world")
+			     (:file "stars")
+			     (:file "indigo")
+			     (:file "control-flow")
+			     (:file "noise")))))
+
+#+nil
+(mk:oos :sketch-examples :load :compile-during-load t)
+
+(mk:defsystem :sketch
+  :source-pathname *sketch-source-dir*
+  :binary-pathname *sketch-binary-dir*
+  :source-extension "lisp"
+  :depends-on (:alexandria
+	       :closer-mop
+	       :glkit
+	       :glu-tessellate
+	       :mathkit
+	       :md5
+	       :noisy
+	       :sdl2
+	       :cl-plus-c
+	       :sdl2-image
+	       :sdl2-ttf
+	       :sdl2kit
+	       :split-sequence
+	       :static-vectors
+	       :trivial-garbage
+	       :zpng)
+  :components ((:module "src"
+		:components ((:file "package")
+			     (:file "math")
+			     (:file "utils")
+			     (:file "environment")
+			     (:file "resources")
+			     (:file "color")
+			     (:file "channels")
+			     (:file "shaders")
+			     (:file "pen")
+			     (:file "font")
+			     (:file "geometry")
+			     (:file "image")
+			     (:file "shapes")
+			     (:file "transforms")
+			     (:file "complex-transforms")
+			     (:file "drawing")
+			     (:file "bindings")
+			     (:file "sketch")
+			     (:file "entities")
+			     (:file "figures")
+			     (:file "controllers")
+			     (:file "canvas")
+			     (:file "noise")))))
+
+#+nil
+(mk:oos :sketch :load :compile-during-load t)
+
