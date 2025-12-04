@@ -92,7 +92,11 @@ but may be considered unique for all practical purposes."
 (defun relative-path (path &optional (system 'sketch))
   (if *build*
       path
-      (format nil "~a" (asdf:system-relative-pathname system path))))
+      (format nil "~a"
+	      #+(and mk-defsystem (not asdf))
+	      (mk::system-relative-pathname system path)
+	      #+asdf
+	      (asdf:system-relative-pathname system path))))
 
 (defun surface-format (surface)
   (plus-c:c-let ((surface sdl2-ffi:sdl-surface :from surface))
