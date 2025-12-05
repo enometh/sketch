@@ -10,11 +10,25 @@
 
 (defvar *sketch-source-dir*
   (merge-pathnames "Github/sketch/" (translate-logical-pathname "EXTERN:")))
-(defvar *sketch-binary-dir* (binary-directory *sketch-source-dir*))
 
 #+nil
 (progn (pushnew :cl-sdl2 *features*)
        (pushnew :zpng *features*))
+
+#+nil
+(pushnew :glfwsketch *features*)
+
+(assert (and (or (find :glfwsketch *features*) (find :cl-sdl2 *features*))
+	     (not (and  (find :glfwsketch *features*)
+			 (find :cl-sdl2 *features*))))
+    nil
+    "make sketch support glfw via gficl. push exactly one of :glfwsketch or :cl-sdl2 on features")
+
+(defvar *sketch-binary-dir*
+  #+cl-sdl2
+  (binary-directory *sketch-source-dir*)
+  #+glfwsketch
+  (binary-directory *sketch-source-dir* "glfwsketch"))
 
 ;; fixme
 (mk:defsystem :sketch-examples
@@ -57,7 +71,8 @@
 	       :split-sequence
 	       :static-vectors
 	       (:feature :cl-sdl2 :trivial-garbage)
-	       (:feature :zpng "zpng"))
+	       (:feature :zpng "zpng")
+	       (:feature :glfwsketch :gficl-bt))
   :components ((:module "src"
 		:components ((:file "package")
 			     (:file "math")
@@ -76,7 +91,8 @@
 			     (:file "complex-transforms")
 			     (:file "drawing")
 			     (:file "bindings")
-			     (:file "sketch" :if-feature :cl-sdl2)
+			     (:file "sketch")
+			     (:file "gficl-sketch" :if-feature :glfwsketch)
 			     (:file "entities")
 			     (:file "figures")
 			     (:file "controllers")
@@ -85,4 +101,3 @@
 
 #+nil
 (mk:oos :sketch :load :compile-during-load t)
-

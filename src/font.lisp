@@ -113,3 +113,8 @@
                                                      :pointer (sdl2-ttf:open-font filename 16))
                                 :color +white+
                                 :size 16))))))
+
+#+glfwsketch
+(progn
+  (defun make-error-font ())
+  (defun make-default-font ()))

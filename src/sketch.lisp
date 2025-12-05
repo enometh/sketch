@@ -45,8 +45,11 @@
    (resizable :initform nil :accessor sketch-resizable :initarg :resizable)
    (copy-pixels :initform nil :accessor sketch-copy-pixels :initarg :copy-pixels)
    (y-axis :initform :down :accessor sketch-y-axis :initarg :y-axis)
-   (close-on :initform :escape :accessor sketch-close-on :initarg :close-on)))
+   (close-on :initform :escape :accessor sketch-close-on :initarg :close-on)
+   (%sketch-init-args :initform nil)))
 
+#+cl-sdl2
+(progn
 (defclass sketch-window (kit.sdl2:gl-window)
   ((%sketch
     :initarg :sketch
@@ -92,6 +95,7 @@
 (define-sketch-writer y-axis
   (declare (ignorable win))
   (initialize-view-matrix instance))
+)
 
 ;;; Generic functions
 
@@ -111,6 +115,8 @@
 
 ;;; Initialization
 
+#+cl-sdl2
+(progn
 (defparameter *initialized* nil)
 
 (defun initialize-sketch ()
@@ -148,14 +154,20 @@
   (with-slots ((fs %delayed-init-funs)) instance
     (loop for f across fs
           do (funcall f))
-    (setf fs (make-array 0 :adjustable t :fill-pointer t))))
+    (setf fs (make-array 0 :adjustable t :fill-pointer t)))))
 
 (defmethod update-instance-for-redefined-class :after
     ((instance sketch) added-slots discarded-slots property-list &rest initargs)
   (declare (ignore added-slots discarded-slots property-list))
   (apply #'prepare instance initargs)
   (setf (sketch-%setup-called instance) nil)
-  (setf (slot-value instance '%entities) (make-hash-table)))
+  (setf (slot-value instance '%entities) (make-hash-table))
+  #+glfwsketch
+  (with-slots (gficl::main-thread) (sketch-%window instance)
+    (when (bt:threadp gficl::main-thread)
+      (when (bt:thread-alive-p gficl::main-thread)
+	(gficl-app:restart-pipeline  (sketch-%window instance))))))
+
 
 ;;; Error handling
 
@@ -224,6 +236,8 @@
       (gl:viewport 0 0 width height)
       (setf %viewport-changed nil))))
 
+#+cl-sdl2
+(progn
 (defmethod kit.sdl2:render ((win sketch-window) &aux (sketch (%sketch win)))
   (maybe-change-viewport sketch)
   (with-sketch (sketch)
@@ -276,7 +290,7 @@
 (defmethod close-window :after ((instance sketch))
   (when (and *build* (not (kit.sdl2:all-windows)))
     (sdl2-ttf:quit)
-    (kit.sdl2:quit)))
+    (kit.sdl2:quit))))
 
 ;;; DEFSKETCH macro
 
@@ -292,6 +306,13 @@
   (loop for b in bindings
         when (binding-channelp b)
         collect `(define-channel-observer
+		   #+glfwsketch
+		   (let ((app (car gficl-app:*apps*)))
+                     (when app
+                       (setf (,(binding-accessor b) app)
+                             (in ,(binding-channel-name b)
+                                 ,(binding-initform b)))))
+		   #+cl-sdl2
                    ; TODO: Should this really depend on kit.sdl2?
                    (let ((win (kit.sdl2:last-window)))
                      (when win
@@ -333,6 +354,8 @@
 
 ;;; Control flow
 
+#+cl-sdl2
+(progn
 (defun stop-loop ()
   (setf (sdl2.kit:idle-render (sketch-%window *sketch*)) nil))
 
@@ -401,6 +424,7 @@
   (if (window-%closing instance)
       (call-next-method)
       (kit.sdl2:close-window (%sketch instance))))
+)
 
 ;;; Resource-handling
 

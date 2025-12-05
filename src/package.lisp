@@ -17,6 +17,9 @@
 
            :defsketch
 
+           #+glfwsketch
+           :launch-sketch
+
            :sketch-title
            :sketch-width
            :sketch-height
