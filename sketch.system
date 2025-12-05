@@ -12,6 +12,11 @@
   (merge-pathnames "Github/sketch/" (translate-logical-pathname "EXTERN:")))
 (defvar *sketch-binary-dir* (binary-directory *sketch-source-dir*))
 
+#+nil
+(progn (pushnew :cl-sdl2 *features*)
+       (pushnew :zpng *features*))
+
+;; fixme
 (mk:defsystem :sketch-examples
   :source-pathname *sketch-source-dir*
   :binary-pathname *sketch-binary-dir*
@@ -41,17 +46,18 @@
 	       :glkit
 	       :glu-tessellate
 	       :mathkit
-	       :md5
+	       (:feature (:and :jcma-libs) "jcma-md5")
+	       (:feature (:not :jcma-libs) :md5)
 	       :noisy
-	       :sdl2
-	       :cl-plus-c
-	       :sdl2-image
-	       :sdl2-ttf
-	       :sdl2kit
+	       (:feature :cl-sdl2 :sdl2)
+	       (:feature :cl-sdl2 :cl-plus-c)
+	       (:feature :cl-sdl2 :sdl2-image)
+	       (:feature :cl-sdl2 :sdl2-ttf)
+	       (:feature :cl-sdl2 :sdl2kit)
 	       :split-sequence
 	       :static-vectors
-	       :trivial-garbage
-	       :zpng)
+	       (:feature :cl-sdl2 :trivial-garbage)
+	       (:feature :zpng "zpng"))
   :components ((:module "src"
 		:components ((:file "package")
 			     (:file "math")
@@ -70,7 +76,7 @@
 			     (:file "complex-transforms")
 			     (:file "drawing")
 			     (:file "bindings")
-			     (:file "sketch")
+			     (:file "sketch" :if-feature :cl-sdl2)
 			     (:file "entities")
 			     (:file "figures")
 			     (:file "controllers")

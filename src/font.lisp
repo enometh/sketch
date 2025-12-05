@@ -58,6 +58,7 @@
         ((eq align :center) (- (round (/ width 2))))
         (t 0)))
 
+#+cl-sdl2
 (defun text-line-image (line)
   (let* ((line (if (> (length line) 0) line " "))
          (font (env-font *env*))
@@ -87,6 +88,7 @@
             (incf top (* (second scale) spacing))
             (gl:delete-textures (list (image-texture resource)))))))))
 
+#+cl-sdl2
 (let ((font))
   (defun make-default-font ()
     (setf font (or font
@@ -99,6 +101,7 @@
                                 :color +black+
                                 :size 18))))))
 
+#+cl-sdl2
 (let ((font))
   (defun make-error-font ()
     (setf font (or font

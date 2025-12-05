@@ -2,6 +2,7 @@
 
 (uiop:define-package #:sketch
     (:use #:cl)
+    #+cl-sdl2
   (:import-from :kit.sdl2
                 :mousebutton-event
                 :mousemotion-event

@@ -28,6 +28,7 @@ of the image is drawn to the rect of X,Y,W,H, which are all in pixel values, and
 X & Y are relative to the image."
   (cropped-image-from-image image-resource x y w h))
 
+#+zpng
 (defun save-png (pathname)
   (let ((width (sketch-width *sketch*))
         (height (sketch-height *sketch*)))

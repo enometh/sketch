@@ -74,6 +74,10 @@ but may be considered unique for all practical purposes."
   (alexandria:make-keyword
    (apply #'alexandria:symbolicate
           (coerce (map 'array (lambda (x) (format nil "~x" x))
+		       #+jcma-libs
+		       (md5:md5-digest-hexadecimal-string
+			 (write-to-string object))
+		       #-jcma-libs
                        (md5:md5sum-string (write-to-string object)))
                   'list))))
 
@@ -98,6 +102,7 @@ but may be considered unique for all practical purposes."
 	      #+asdf
 	      (asdf:system-relative-pathname system path))))
 
+#+cl-sdl2
 (defun surface-format (surface)
   (plus-c:c-let ((surface sdl2-ffi:sdl-surface :from surface))
     (surface :format :format)))

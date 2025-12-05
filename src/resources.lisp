@@ -83,6 +83,7 @@
       (error (format nil "~a's type cannot be deduced." filename))
       (error (format nil "Unsupported resource type ~a" type))))
 
+#+cl-sdl2
 (defun make-image-from-surface (surface &key (free-surface t)
                                              (min-filter :linear)
                                              (mag-filter :linear))
@@ -97,6 +98,7 @@
                          :mag-filter mag-filter)
     image))
 
+#+cl-sdl2
 (defmethod load-typed-resource (filename (type (eql :image))
                                 &key (min-filter :linear)
                                      (mag-filter :linear)
@@ -110,6 +112,7 @@
    :min-filter min-filter
    :mag-filter mag-filter))
 
+#+cl-sdl2
 (defun init-image-texture! (image surface &key (free-surface t)
                                                (min-filter :linear)
                                                (mag-filter :linear))
@@ -140,6 +143,7 @@
         (add-delayed-init-fun! #'init)
         (init))))
 
+#+cl-sdl2
 (defun cut-surface (surface x y w h)
   (if (and x y w h)
       (let ((src-rect (sdl2:make-rect x y w h))
@@ -153,6 +157,7 @@
         dst-surface)
       surface))
 
+#+cl-sdl2
 (defmethod load-typed-resource (filename (type (eql :typeface))
                                 &key (size 18) &allow-other-keys)
   (make-instance 'typeface
@@ -168,6 +173,7 @@
 (defmethod free-resource ((image image))
   (gl:delete-textures (list (image-texture image))))
 
+#+cl-sdl2
 (defmethod free-resource ((typeface typeface))
   (let ((pointer (typeface-pointer typeface)))
     (setf (typeface-pointer typeface) nil)

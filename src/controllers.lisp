@@ -60,6 +60,7 @@ x & y are assumed to come last in the argument list."
       (on-enter entity))
     (call-next-method)))
 
+#+cl-sdl2
 (defmethod kit.sdl2:mousebutton-event ((instance sketch-window) state timestamp button x y)
   ;; For backward compatibility.
   (kit.sdl2:mousebutton-event (%sketch instance) state timestamp button x y)
@@ -106,6 +107,7 @@ x & y are assumed to come last in the argument list."
 (defmethod on-mouse-right-up :after ((instance sketch) x y)
   (on-right-click instance x y))
 
+#+cl-sdl2
 (defmethod kit.sdl2:mousemotion-event ((instance sketch-window) timestamp button-mask x y xrel yrel)
   ;; For backward compatibility.
   (kit.sdl2:mousemotion-event (%sketch instance) timestamp button-mask x y xrel yrel)
@@ -122,6 +124,7 @@ x & y are assumed to come last in the argument list."
         (on-leave *current-entity*)
         (setf *current-entity* nil)))))
 
+#+cl-sdl2
 (defmethod kit.sdl2:mousemotion-event :after ((instance sketch-window)
                                               timestamp button-mask x y xrel yrel)
   (out :mouse (cons x y)
@@ -131,12 +134,14 @@ x & y are assumed to come last in the argument list."
        :mouse-xrel xrel
        :mouse-yrel yrel))
 
+#+cl-sdl2
 (defmethod kit.sdl2:mousewheel-event :after ((instance sketch-window)
                                              timestamp x y)
   (out :mouse-wheel (cons x y)
        :mouse-wheel-x x
        :mouse-wheel-y y))
 
+#+cl-sdl2
 (defmethod kit.sdl2:mousebutton-event :after ((instance sketch-window)
                                               state timestamp button x y)
   (with-slots (%env) (%sketch instance)
@@ -159,9 +164,11 @@ x & y are assumed to come last in the argument list."
     (let ((*draw-mode* nil))
       (call-next-method))))
 
+#+cl-sdl2
 (defmethod kit.sdl2:textinput-event :after ((instance sketch-window) timestamp text)
   (on-text (%sketch instance) text))
 
+#+cl-sdl2
 (defmethod kit.sdl2:keyboard-event :after ((instance sketch-window) state timestamp repeat-p keysym)
   (when (not repeat-p)
     (on-key (%sketch instance)

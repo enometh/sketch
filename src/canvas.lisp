@@ -35,6 +35,7 @@
     (dotimes (i 4)
       (setf (cffi:mem-aref ptr :uint8 (+ pos i)) (elt vec i)))))
 
+#+cl-sdl2
 (defmethod canvas-image ((canvas canvas)
                          &key (min-filter :linear)
                               (mag-filter :linear)

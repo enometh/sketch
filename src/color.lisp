@@ -175,7 +175,10 @@
          (arr (make-array (length grp)
                           :element-type '(unsigned-byte 8)
                           :initial-contents grp))
-         (seq (md5:md5sum-sequence arr))
+         (seq #-jcma-libs
+	   (md5:md5sum-sequence arr)
+	   #+jcma-libs
+	   (md5:md5-digest-vector arr))
          (hash (loop for i across seq sum i)))
     (hsb-360 (mod (+ (* 144 (mod n 20)) (mod hash 60)) 360)
              (alexandria:clamp (+ 25 (* 25 (mod hash 4)) (mod hash 25)) 0 100)

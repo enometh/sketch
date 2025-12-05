@@ -46,7 +46,8 @@
           (env-white-pixel-texture env) (make-white-pixel-texture)
           (env-white-color-vector env) #(255 255 255 255)
           (env-pen env) (make-default-pen)
-          (env-font env) (make-default-font))
+	  #+cl-sdl2
+          (env-font env) #+cl-sdl2 (make-default-font))
     (initialize-view-matrix sketch)
     (kit.gl.shader:use-program (env-programs env) :fill-shader)))
 
@@ -60,13 +61,14 @@
 
 (defun initialize-gl (sketch)
   (with-slots ((w %window)) sketch
-    (handler-case (sdl2:gl-set-swap-interval 1)
-      ;; Some OpenGL drivers do not allow to control swapping.
-      ;; In this case SDL2 sets an error that needs to be cleared.
-      (sdl2::sdl-rc-error (e)
-        (warn "VSYNC was not enabled; frame rate was not restricted to 60fps.~%  ~A" e)
-        (sdl2-ffi.functions:sdl-clear-error)))
-    (setf (kit.sdl2:idle-render w) t)
+    #+cl-sdl2
+    (progn (handler-case (sdl2:gl-set-swap-interval 1)
+	     ;; Some OpenGL drivers do not allow to control swapping.
+	     ;; In this case SDL2 sets an error that needs to be cleared.
+	     (sdl2::sdl-rc-error (e)
+               (warn "VSYNC was not enabled; frame rate was not restricted to 60fps.~%  ~A" e)
+               (sdl2-ffi.functions:sdl-clear-error)))
+	   (setf (kit.sdl2:idle-render w) t))
     (gl:enable :blend :line-smooth :polygon-smooth)
     (gl:blend-func :src-alpha :one-minus-src-alpha)
     (gl:hint :line-smooth-hint :nicest)
