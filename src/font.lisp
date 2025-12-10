@@ -91,6 +91,8 @@
   (defun make-default-font ()
     (setf font (or font
                    (let ((filename (relative-path "res/sourcesans/SourceSansPro-Regular.otf")))
+		     #+sbcl
+		     (setq filename (namestring (probe-file filename)))
                      (make-font :face (make-instance 'typeface
                                                      :filename filename
                                                      :pointer (sdl2-ttf:open-font filename 18))
@@ -101,6 +103,8 @@
   (defun make-error-font ()
     (setf font (or font
                    (let ((filename (relative-path "res/sourcesans/SourceSansPro-Regular.otf")))
+		     #+sbcl
+		     (setq filename (namestring (probe-file filename)))
                      (make-font :face (make-instance 'typeface
                                                      :filename filename
                                                      :pointer (sdl2-ttf:open-font filename 16))
