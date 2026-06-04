@@ -35,6 +35,20 @@
     (dotimes (i 4)
       (setf (cffi:mem-aref ptr :uint8 (+ pos i)) (elt vec i)))))
 
+#+glfwsketch
+(defmethod canvas-image ((canvas canvas)
+			 &key (min-filter :linear)
+                         (mag-filter :linear)
+                         &allow-other-keys)
+
+  (if (%canvas-locked canvas)
+      (%canvas-image canvas)
+      (make-texture-rgba (canvas-height canvas)
+			 (canvas-width canvas)
+			 :data (%canvas-vector-pointer canvas)
+			 :min-filter min-filter
+			 :mag-filter mag-filter)))
+
 #+cl-sdl2
 (defmethod canvas-image ((canvas canvas)
                          &key (min-filter :linear)

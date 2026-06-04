@@ -72,7 +72,8 @@
 	       :static-vectors
 	       (:feature :cl-sdl2 :trivial-garbage)
 	       (:feature :zpng "zpng")
-	       (:feature :glfwsketch :gficl-bt))
+	       (:feature :glfwsketch :gficl-bt)
+	       (:feature :glfwsketch :gficl/load/imlib2))
   :components ((:module "src"
 		:components ((:file "package")
 			     (:file "math")

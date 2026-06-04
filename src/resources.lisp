@@ -98,7 +98,60 @@
                          :mag-filter mag-filter)
     image))
 
-#+cl-sdl2
+#+glfwsketch
+(defun make-texture-rgba (width height &key
+			  data
+			  (mipmapping nil)
+			  (wrap-s :repeat)
+			  (wrap-t :repeat)
+			  (min-filter :nearest)
+			  (mag-filter :nearest)
+			  &aux (format :rgba)
+			  (data-type :unsigned-byte)
+			  (internal-format format)
+			  (type :texture-2d))
+
+  (let ((id (gl:gen-texture)))
+    (gl:bind-texture type id)
+    (gl:tex-image-2d type 0 internal-format width height 0 format data-type data)
+    (if mipmapping (gl:generate-mipmap type))
+    (when wrap-s
+      (check-type wrap-s (member :clamp-to-edge :clamp-to-border :mirrored-repeat :repeat :mirrored-clamp-to-edge))
+      (gl:tex-parameter type :texture-wrap-s wrap-s))
+    (when wrap-t
+      (check-type wrap-t (member :clamp-to-edge :clamp-to-border :mirrored-repeat :repeat :mirrored-clamp-to-edge)))
+    (gl:tex-parameter type :texture-min-filter min-filter)
+    (gl:tex-parameter type :texture-mag-filter mag-filter)
+    (gl:bind-texture type 0)
+    id))
+
+#+glfwsketch
+(defun load-image-imlib2 (path &key (min-filter :linear) (mag-filter :linear))
+  (cffi:with-foreign-object (err :int)
+    (let ((image (imlib:load-image-with-errno-return
+		  (namestring path) err)))
+      (unless (zerop (cffi:mem-ref err :int))
+	(error "Imlib2: failed to load image: load-error: ~A"
+	       (imlib:strerror (cffi:mem-ref err :int))))
+      (imlib:context-set-image image)
+      (unwind-protect
+	   (let* ((w (imlib:image-get-width))
+		  (h (imlib:image-get-height))
+		  (ptr (imlib:image-get-data)))
+	     (loop for i below (* w h)
+		   for elt = (cffi:mem-aref ptr :uint32 i)
+		   do (setf (cffi:mem-aref ptr :uint32 i)
+			    (GFICL/LOAD/IMAGE-IMLIB2::argb->rgba elt)))
+	     #+nil ;; sketch inverts images by default uses sdl layout
+		   ;; not opengl layout
+	     (GFICL/LOAD/IMAGE-IMLIB2::vertical-flip ptr w h)
+	     (values (make-texture-rgba w h :data ptr
+				:min-filter min-filter
+				:mag-filter mag-filter)
+		     w h))
+	(imlib:context-free (imlib:context-get))
+	(imlib:free-image)))))
+
 (defmethod load-typed-resource (filename (type (eql :image))
                                 &key (min-filter :linear)
                                      (mag-filter :linear)
@@ -107,6 +160,15 @@
                                      (w nil)
                                      (h nil)
                                 &allow-other-keys)
+  #+glfwsketch
+  (progn
+    (unless (every #'null (list x y w h))
+      (warn "load-typed-resource: ignoring cut-image args ~S" (list x y w h)))
+    (multiple-value-bind (tex w h)
+	(load-image-imlib2 filename :min-filter min-filter :mag-filter mag-filter)
+      (make-instance 'image
+	:width w :height h :texture tex)))
+  #+cl-sdl2
   (make-image-from-surface
    (cut-surface (sdl2-image:load-image filename) x y w h)
    :min-filter min-filter
