@@ -54,6 +54,23 @@
                    (or (image-texture res) (env-white-pixel-texture *env*))))))
 
 (defun draw-shape (primitive fill-vertices stroke-vertices)
+  ;;(declare (optimize (debug 3) (safety 3) (speed 0)))
+
+  ;; rendering the font via gficl/load/ft2 changes the shader program,
+  ;; buffer binding and vertex-array binding. we reset the shader
+  ;; program elsewhere but we need to rebind the other two before
+  ;; drawing. (duplicates start-draw minus buffer allocation)
+  ;;(gl:active-texture :texture0)
+  (progn
+    (kit.gl.shader:use-program (env-programs *env*) :fill-shader)
+    #+nil
+    (format t "push-vertices: binding vertex-array ~D vertex-buffer ~D~&"
+	    (slot-value (env-vao *env*) 'kit.gl.vao::id)
+	    (aref (slot-value (env-vao *env*) 'kit.gl.vao::vbos) 0))
+    (kit.gl.vao:vao-bind (env-vao *env*))
+    (%gl:bind-buffer :array-buffer (aref (slot-value (env-vao *env*) 'kit.gl.vao::vbos) 0)))
+
+  (maybe-change-viewport *sketch*)
   (when (and fill-vertices (pen-fill (env-pen *env*)))
     (multiple-value-bind (shader-color shader-texture uv-rect)
         (shader-color-texture-values (pen-fill (env-pen *env*)))
@@ -77,12 +94,20 @@
                          *draw-mode*))))))
 
 (defmethod push-vertices (vertices color texture primitive (draw-mode (eql :gpu)))
+  (declare (optimize (speed 0) (safety 3) (debug 3)))
   (kit.gl.shader:uniform-matrix (env-programs *env*) :model-m 4
                                 (vector (env-model-matrix *env*)))
   (gl:bind-texture :texture-2d texture)
   (symbol-macrolet ((position (env-buffer-position *env*)))
     (when (> (* *bytes-per-vertex* (+ position (length vertices))) *buffer-size*)
+      (warn "RESTART")
       (start-draw))
+    #+nil
+    (format t "map-buffer-range: ~S~&" (list  :array-buffer
+					      (* position *bytes-per-vertex*)
+					      (* (length vertices) *bytes-per-vertex*)
+					      +access-mode+))
+    ;;(break)
     (let ((buffer-pointer (%gl:map-buffer-range :array-buffer
                                                 (* position *bytes-per-vertex*)
                                                 (* (length vertices) *bytes-per-vertex*)

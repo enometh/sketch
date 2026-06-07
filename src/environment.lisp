@@ -46,8 +46,7 @@
           (env-white-pixel-texture env) (make-white-pixel-texture)
           (env-white-color-vector env) #(255 255 255 255)
           (env-pen env) (make-default-pen)
-	  #+cl-sdl2
-          (env-font env) #+cl-sdl2 (make-default-font))
+          (env-font env) (make-default-font))
     (initialize-view-matrix sketch)
     (kit.gl.shader:use-program (env-programs env) :fill-shader)))
 

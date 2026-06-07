@@ -17,6 +17,8 @@
    (width :accessor image-width :initarg :width)
    (height :accessor image-height :initarg :height)))
 
+(defclass image-no-free (image) ())
+
 (defclass cropped-image (image)
   ((uv-rect :accessor cropped-image-uv-rect :initarg :uv-rect)
    (original-image :accessor original-image :initarg :original-image)))
@@ -101,28 +103,51 @@
 #+glfwsketch
 (defun make-texture-rgba (width height &key
 			  data
+			  source
 			  (mipmapping nil)
 			  (wrap-s :repeat)
 			  (wrap-t :repeat)
 			  (min-filter :nearest)
 			  (mag-filter :nearest)
-			  &aux (format :rgba)
 			  (data-type :unsigned-byte)
+			  (format :rgba)
 			  (internal-format format)
-			  (type :texture-2d))
+			  (type :texture-2d)
+			  raw)
 
-  (let ((id (gl:gen-texture)))
+  "If DATA is provided, create a texture. If SOURCE is provided instead,
+ copy pixels from source via glCopyTexImage2D.
+  ;; if RAW is true, assume DATA is an (UNSIGNED-BYTE 8) vector containing
+  ;; appropriately formatted data for specified TYPE
+"
+  (assert (eql type :texture-2d))
+  (assert (eql format :rgba))
+  (assert (eql internal-format format))
+  (let ((id (gl:gen-texture))
+	(old-texture (gl:get-integer :texture-binding-2d)))
     (gl:bind-texture type id)
-    (gl:tex-image-2d type 0 internal-format width height 0 format data-type data)
+    (gl:tex-parameter type :texture-min-filter min-filter)
+    (gl:tex-parameter type :texture-mag-filter mag-filter)
+    ;;(gl:pixel-store :unpack-row-length (/ (sdl2:surface-pitch rgba-surface) 4))
+    (gl:tex-image-2d type 0 internal-format
+		     width
+		     height
+		     0
+		     format
+		     data-type
+		     data
+		     :raw raw)
     (if mipmapping (gl:generate-mipmap type))
     (when wrap-s
       (check-type wrap-s (member :clamp-to-edge :clamp-to-border :mirrored-repeat :repeat :mirrored-clamp-to-edge))
       (gl:tex-parameter type :texture-wrap-s wrap-s))
     (when wrap-t
       (check-type wrap-t (member :clamp-to-edge :clamp-to-border :mirrored-repeat :repeat :mirrored-clamp-to-edge)))
-    (gl:tex-parameter type :texture-min-filter min-filter)
-    (gl:tex-parameter type :texture-mag-filter mag-filter)
-    (gl:bind-texture type 0)
+    (when source
+      (gl:copy-image-sub-data source type 0 0 0 0
+			      id type 0 0 0 0
+			      width height 1))
+    (gl:bind-texture type old-texture)
     id))
 
 #+glfwsketch
@@ -219,9 +244,28 @@
         dst-surface)
       surface))
 
-#+cl-sdl2
+#+glfwsketch
+(defun %make-ft2-fbo-mixin-app (font-pathname font-size)
+  (let ((ft2-fbo-mixin-app
+	 (make-instance 'gficl/load/ft2:ft2-fbo-mixin-app
+	   :font-size font-size
+	   :font-path font-pathname)))
+    (let ((program (gl:get-integer :current-program)))
+      (gficl/load/ft2:ft2-fbo-mixin-app-setup ft2-fbo-mixin-app)
+      ;;#+nil
+      (format t "%make-ft2-fbo-mixin-app: setting current-program from ~D to ~D~&"
+	      (gl:get-integer :current-program)
+	      program)
+      (gl:use-program program))
+    ft2-fbo-mixin-app))
+
 (defmethod load-typed-resource (filename (type (eql :typeface))
                                 &key (size 18) &allow-other-keys)
+  #+glfwsketch
+  (make-instance 'typeface
+                 :filename filename
+                 :pointer (%make-ft2-fbo-mixin-app filename size))
+  #+cl-sdl2
   (make-instance 'typeface
                  :filename filename
                  :pointer (sdl2-ttf:open-font filename
@@ -235,8 +279,15 @@
 (defmethod free-resource ((image image))
   (gl:delete-textures (list (image-texture image))))
 
-#+cl-sdl2
+(defmethod free-resource ((image image-no-free)))
+
 (defmethod free-resource ((typeface typeface))
+  #+glfwsketch
+  (let ((ft2-fbo-mixin-app (typeface-pointer typeface)))
+    (when ft2-fbo-mixin-app
+      (gficl/load/ft2:ft2-fbo-mixin-app-cleanup ft2-fbo-mixin-app)
+      (setf (typeface-pointer typeface) nil)))
+  #+cl-sdl2
   (let ((pointer (typeface-pointer typeface)))
     (setf (typeface-pointer typeface) nil)
     (sdl2-ttf:close-font pointer)))
