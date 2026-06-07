@@ -76,13 +76,22 @@
       (setq %viewport-changed t))
     (maybe-change-viewport sketch)))
 
+(defmacro with-fake-error-handling ((sketch) &body body)
+  (alexandria:with-gensyms (%error %stage)
+    `(let (,%error ,%stage)
+       (macrolet ((with-stage (stage &body body)
+                    `(progn
+                       (setf ,',%stage ,stage)
+                       ,@body)))
+         ,@body))))
+
 (defmethod gficl-app:draw-fn ((app sketch-app))
   ;; see kit.sdl2:render sdl2-sketch-window
   (with-slots ((sketch %sketch)) app
     (maybe-change-viewport sketch)
     (with-sketch (sketch)
       (with-gl-draw
-	(with-error-handling (sketch)
+	(with-fake-error-handling (sketch)
           (unless (sketch-copy-pixels sketch)
             (background (gray 0.4)))
           (when (or (env-red-screen *env*)
