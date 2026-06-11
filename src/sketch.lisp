@@ -292,6 +292,17 @@
     (sdl2-ttf:quit)
     (kit.sdl2:quit))))
 
+;;; after quitting a window sdl2 gets in a weird state, either the
+;;; thread is running, or stale windows are present
+#+cl-sdl2
+(defun reset ()
+  "Slegde Hammer"
+  (sdl2:quit*)
+  (sdl2-ttf:quit)
+  (setq *initialized* nil)
+  (clrhash kit.sdl2::*all-windows*)
+  (clrhash kit.sdl2::*idle-render-windows*))
+
 ;;; DEFSKETCH macro
 
 (defun define-sketch-defclass (name bindings)
