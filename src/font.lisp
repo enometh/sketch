@@ -107,6 +107,20 @@
 				     :min-filter :linear
 				     :mag-filter :linear
 				     )))
+	;; ;madhu 260621 HORRIBLE HORRIBLE HORRIBLE, flip texture to
+	;; fit sketch's broken automatic inversion, by consing up
+	;; foreign memory for the image 60 times every second. TODO
+	;; solve this by fixing the cl-sdl2 path to use opengl2 st
+	;; coords for all textures (also undoing the fix in
+	;; load-image-imlib2), or modify the fragment shader.lisp in
+	;; shaders.lisp to use //f_out = texture(texid,
+	;; vec2(f_texcoord.x, 1.0 - f_texcoord.y)) * f_color;
+	(progn
+	  (gl:bind-texture :texture-2d tex)
+	  (cffi:with-foreign-object (data :uint8 (* w h 4))
+	    (%gl:get-tex-image :texture-2d 0 :rgba :unsigned-byte data)
+	    (GFICL/LOAD/IMAGE-IMLIB2::vertical-flip data w h)
+	    (gl:tex-image-2d :texture-2d 0 :rgba w h 0 :rgba :unsigned-byte data)))
 	(prog1
 	    #+nil
 	  (make-instance 'image-no-free :width w :height h :texture tex)
@@ -119,7 +133,7 @@
 	  #+nil
 	  (gl:viewport (elt orig-viewport 0) (elt orig-viewport 1)
 		       (elt orig-viewport 2) (elt orig-viewport 3))
-	  ;;#+nil
+	  #+nil
 	  (let ((program (gl:get-integer :current-program)))
 	    (unless (= program orig-program)
 	      #+nil
