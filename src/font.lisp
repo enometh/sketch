@@ -92,12 +92,17 @@
     (with-slots (gficl/load/ft2::fbo gficl/load/ft2::ft2) ft2-fbo-mixin
       (unless gficl/load/ft2::fbo
 	(assert (null gficl/load/ft2::ft2))
-	(gficl/load/ft2::ft2-fbo-mixin-app-setup ft2-fbo-mixin)))
-    (destructuring-bind (r g b a) (color-rgba-255 (font-color font))
+	(gficl/load/ft2::ft2-fbo-mixin-app-setup ft2-fbo-mixin))
+      (destructuring-bind (r g b a) (color-rgba-255 (font-color font))
+	(gficl/load/ft2:ft2-app-set-text-color gficl/load/ft2::ft2
+					       (/ r 255.0) (/ g 255.0)
+					       (/ b 255.0)
+					       (/ a 255.0)))
+      (gl:clear-color 0 0 0 0)
       (let* ((source
 	      (gficl/load/ft2:ft2-fbo-mixin-render-text-to-texture
-	       ft2-fbo-mixin
-	       line))
+		      ft2-fbo-mixin
+		      line))
 	     (h (slot-value ft2-fbo-mixin 'gficl/load/ft2::height))
 	     (w (slot-value ft2-fbo-mixin 'gficl/load/ft2::width))
 	     ;;#+nil
