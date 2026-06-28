@@ -440,6 +440,20 @@
       (kit.sdl2:close-window (%sketch instance))))
 )
 
+#+glfwsketch
+(progn
+(defun stop-loop ()
+  (setf (gficl-app:disable-draw-fn (sketch-%window *sketch*))
+	t))
+
+(defun start-loop ()
+  (setf (gficl-app:disable-draw-fn (sketch-%window *sketch*))
+	nil))
+)
+
+#+nil
+(trace stop-loop start-loop)
+
 ;;; Resource-handling
 
 (defun delay-init-p ()
