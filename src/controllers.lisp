@@ -86,7 +86,10 @@ x & y are assumed to come last in the argument list."
 (defmethod on-mouse-button :after ((instance sketch) button state x y)
   (case button
     (:left (on-mouse-left instance state x y))
-    (:middle (on-mouse-middle instance state x y))
+    ((:middle
+      #+glfsketch
+      :|3|)
+     (on-mouse-middle instance state x y))
     (:right (on-mouse-right instance state x y))))
 
 (defmacro def-on-mouse (button-name)
