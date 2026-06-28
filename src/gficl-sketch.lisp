@@ -106,8 +106,15 @@
 (defmethod gficl-app:update-fn ((app sketch-app))
   (with-slots ((instance %sketch)) app
     (alexandria:when-let (close-on (sketch-close-on instance))
-      (gficl:map-keys-pressed (close-on (glfw:set-window-should-close))))))
-
+      (gficl:map-keys-pressed (close-on (glfw:set-window-should-close))))
+    ;; very limited input handling compared to cl-sdl2 sketch:
+    (destructuring-bind (x y) (gficl:mouse-pos)
+      (on-hover instance  x y)
+      (dolist (button (gficl:buttons-released))
+	(on-mouse-button instance button :up x y))
+      (dolist (key (gficl:keys-released))
+	(on-text instance (string key))
+	(on-key instance key :up)))))
 
 ;; we don't want (make-instance sketch) to launch the window, do that
 ;; through launch-sketch, which initializes sketch-window, which is a
