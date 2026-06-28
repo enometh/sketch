@@ -300,6 +300,9 @@
   (sdl2:quit*)
   (sdl2-ttf:quit)
   (setq *initialized* nil)
+  (setq sdl2.kit::*started* nil)
+  (assert (null sdl2::*the-main-thread*))
+  (setq sdl2::*main-thread-channel* nil)
   (clrhash kit.sdl2::*all-windows*)
   (clrhash kit.sdl2::*idle-render-windows*))
 
