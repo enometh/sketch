@@ -20,9 +20,10 @@
   (rect -50 -50 100 100))
 
 (defmethod setup ((indigo indigo) &key &allow-other-keys)
-  (background +indigo+)
-  (with-font (make-font :color +white+)
-    (text "Click to redraw!" 10 10)))
+  (let ((sketch::*sketch* indigo))
+    (background +indigo+)
+    (with-font (make-font :color +white+)
+      (text "Click to redraw!" 10 10))))
 
 (defmethod on-click ((indigo indigo) x y)
   (background +indigo+)
