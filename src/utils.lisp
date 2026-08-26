@@ -141,7 +141,11 @@ but may be considered unique for all practical purposes."
         do (setf (cffi:mem-aref dst* :uint8 i)
                  (cffi:mem-aref src* :uint8 i))))
 
-(defun relative-path (path &optional (system 'sketch))
+
+(defvar *default-system* 'sketch
+ "Name of system against which relative-path resolves relative paths")
+
+(defun relative-path (path &optional (system *default-system*))
   (if *build*
       path
       (format nil "~a"
